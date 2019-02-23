@@ -5,7 +5,7 @@ import java.util.List;
 
 public class TwoThreeTree<T extends Comparable<T>> {
 
-    private Node<T> root = null;
+    private Node root = null;
     
     public TwoThreeTree() {
     }
@@ -16,7 +16,7 @@ public class TwoThreeTree<T extends Comparable<T>> {
         displayNode(root, "");
     }
     
-    private void displayNode(Node<T> node, String spacer) {
+    private void displayNode(Node node, String spacer) {
         if (node == null) {
             return;
         }
@@ -38,9 +38,9 @@ public class TwoThreeTree<T extends Comparable<T>> {
     
     public void addItem(T item) {
         if (root == null) {
-            root = new Node<>(item);
+            root = new Node(item);
         } else {
-            Node<T> newRoot = insertNode(root, item);
+            Node newRoot = insertNode(root, item);
             
             if (newRoot != null) {
                 root = newRoot;
@@ -48,8 +48,8 @@ public class TwoThreeTree<T extends Comparable<T>> {
         }
     }
     
-    private Node<T> insertNode(Node<T> current, T item) {
-        Node<T> pushUpNode = null;
+    private Node insertNode(Node current, T item) {
+        Node pushUpNode = null;
         
         if (current.isLeaf() || current.childrenAreLeaves() == true) {
             // Found the node/leaf to do the insertion
@@ -69,6 +69,7 @@ public class TwoThreeTree<T extends Comparable<T>> {
         } else {
             // Not deep enough - continue traversing
             if (item.compareTo(current.getLeftMax()) < 0) {
+                // Follow the left child
                 pushUpNode = insertNode(current.getLeftChild(), item);
                 
                 if (pushUpNode != null) {
@@ -78,9 +79,9 @@ public class TwoThreeTree<T extends Comparable<T>> {
                         current.setLeftChild(pushUpNode.getLeftChild());
                         pushUpNode = null;
                     } else {
-                        Node<T> parent = new Node<>();
-                        Node<T> left = new Node<>();
-                        Node<T> middle = new Node<>();
+                        Node parent = new Node();
+                        Node left = new Node();
+                        Node middle = new Node();
 
                         left.setLeftChild(pushUpNode.getLeftChild());
                         left.setMiddleChild(pushUpNode.getMiddleChild());
@@ -97,9 +98,11 @@ public class TwoThreeTree<T extends Comparable<T>> {
                         parent.setMiddleChild(middle);
                         parent.setMiddleMax(parent.getMiddleChild().maxValue());
                         pushUpNode = parent;
+                        displayNode(parent, "");
                     }
                 }
             } else if (item.compareTo(current.getMiddleMax()) < 0 || current.getRightChild() == null) {
+                // Follow the middle child
                 pushUpNode = insertNode(current.getMiddleChild(), item);
                 
                 if (pushUpNode != null) {
@@ -108,9 +111,9 @@ public class TwoThreeTree<T extends Comparable<T>> {
                         current.setRightChild(pushUpNode.getMiddleChild());
                         pushUpNode = null;
                     } else {
-                        Node<T> parent = new Node<>();
-                        Node<T> left = new Node<>();
-                        Node<T> middle = new Node<>();
+                        Node parent = new Node();
+                        Node left = new Node();
+                        Node middle = new Node();
                         
                         left.setLeftChild(current.getLeftChild());
                         left.setMiddleChild(pushUpNode.getLeftChild());
@@ -130,10 +133,11 @@ public class TwoThreeTree<T extends Comparable<T>> {
                     }
                 }
             } else {
+                // Follow the right child
                 pushUpNode = insertNode(current.getRightChild(), item);
                 
                 if (pushUpNode != null) {
-                    Node<T> parent = new Node<>();
+                    Node parent = new Node();
                     current.setRightChild(null);
                     parent.setLeftChild(current);
                     parent.setLeftMax(parent.getLeftChild().maxValue());
@@ -151,7 +155,7 @@ public class TwoThreeTree<T extends Comparable<T>> {
         return pushUpNode;
     }
     
-    private boolean itemFoundInLeaf(Node<T> node, T item) {
+    private boolean itemFoundInLeaf(Node node, T item) {
         if (node.isLeaf()) {
             return (item.compareTo(node.getLeftMax()) == 0);
         } else { // if (node.childrenAreLeaves()) {
@@ -161,7 +165,7 @@ public class TwoThreeTree<T extends Comparable<T>> {
         }
     }
     
-    private void placeInLeaf(Node<T> leaf, T item) {
+    private void placeInLeaf(Node leaf, T item) {
         // Figure out where this belongs - left, middle, or right?
         if (item.compareTo(leaf.getLeftMax()) < 0) {
             // Item is less that current leaf left - move everything to the right
@@ -178,20 +182,20 @@ public class TwoThreeTree<T extends Comparable<T>> {
                 leaf.setMiddleMax(item);
             } else {
                 // Item automatically goes to right
-                leaf.setRightChild(new Node<>(item));
+                leaf.setRightChild(new Node(item));
             }
         }
         
         // Fix the children
-        leaf.setLeftChild(new Node<>(leaf.getLeftMax()));
-        leaf.setMiddleChild(new Node<>(leaf.getMiddleMax()));
+        leaf.setLeftChild(new Node(leaf.getLeftMax()));
+        leaf.setMiddleChild(new Node(leaf.getMiddleMax()));
     }
     
-    private Node<T> splitNode(Node<T> node, T item) {
-        Node<T> parent = new Node<>();
-        Node<T> left = new Node<>();
-        Node<T> middle = new Node<>();
-        Node<T> k = new Node<>(item);
+    private Node splitNode(Node node, T item) {
+        Node parent = new Node();
+        Node left = new Node();
+        Node middle = new Node();
+        Node k = new Node(item);
         
         // Figure out which two children go to new left and which go to new middle
         if (item.compareTo(node.getMiddleMax()) < 0) {
@@ -244,7 +248,7 @@ public class TwoThreeTree<T extends Comparable<T>> {
         return flattenedList;
     }
     
-    private void inOrderAddToList(Node<T> current, List<T> list) {
+    private void inOrderAddToList(Node current, List<T> list) {
         if (current != null) {
             if (current.isLeaf()) {
                 list.add(current.getLeftMax());
@@ -252,6 +256,87 @@ public class TwoThreeTree<T extends Comparable<T>> {
                 inOrderAddToList(current.getLeftChild(), list);
                 inOrderAddToList(current.getMiddleChild(), list);
                 inOrderAddToList(current.getRightChild(), list);
+            }
+        }
+    }
+    
+    private class Node {
+
+        private T leftMax;
+        private T middleMax;
+        
+        private Node leftChild;
+        private Node middleChild;
+        private Node rightChild;
+        
+        public Node() {
+        }
+        
+        public Node(T item) {
+            this.leftMax = item;
+        }
+
+        public T getLeftMax() {
+            return leftMax;
+        }
+
+        public void setLeftMax(T leftMax) {
+            this.leftMax = leftMax;
+        }
+
+        public T getMiddleMax() {
+            return middleMax;
+        }
+
+        public void setMiddleMax(T middleMax) {
+            this.middleMax = middleMax;
+        }
+
+        public Node getLeftChild() {
+            return leftChild;
+        }
+
+        public void setLeftChild(Node leftChild) {
+            this.leftChild = leftChild;
+        }
+
+        public Node getMiddleChild() {
+            return middleChild;
+        }
+
+        public void setMiddleChild(Node middleChild) {
+            this.middleChild = middleChild;
+        }
+
+        public Node getRightChild() {
+            return rightChild;
+        }
+
+        public void setRightChild(Node rightChild) {
+            this.rightChild = rightChild;
+        }
+
+        public boolean isLeaf() {
+            return (leftChild == null && middleChild == null && rightChild == null);
+        }
+        
+        public boolean childrenAreLeaves() {
+            return ((leftChild == null || leftChild.isLeaf())
+                        && (middleChild == null || middleChild.isLeaf())
+                        && (rightChild == null || rightChild.isLeaf()));
+        }
+        
+        public boolean isFull() {
+            return (rightChild != null);
+        }
+
+        public T maxValue() {
+            if (rightChild != null) {
+                return rightChild.getLeftMax();
+            } else if (middleMax != null) {
+                return middleMax;
+            } else {
+                return leftMax;
             }
         }
     }
