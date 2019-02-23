@@ -2,12 +2,16 @@ package ca.buccaneer.twothreetree;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.BiFunction;
 
 public class TwoThreeTree<T extends Comparable<T>> {
 
     private Node root = null;
-    
-    public TwoThreeTree() {
+
+    private BiFunction<T, T, T> mergeCheck;  // Method to call when items need to be merged together
+
+    public TwoThreeTree(BiFunction<T, T, T> mergeCheck) {
+        this.mergeCheck = mergeCheck;
     }
     
     private static final String SPACER = "    ";
@@ -36,7 +40,7 @@ public class TwoThreeTree<T extends Comparable<T>> {
         displayNode(node.getRightChild(), spacer + SPACER);
     }
     
-    public void addItem(T item) {
+    public void add(T item) {
         if (root == null) {
             root = new Node(item);
         } else {
@@ -51,12 +55,14 @@ public class TwoThreeTree<T extends Comparable<T>> {
     private Node insertNode(Node current, T item) {
         Node pushUpNode = null;
         
-        if (current.isLeaf() || current.childrenAreLeaves() == true) {
+        if (current.isLeaf() || current.childrenAreLeaves()) {
             // Found the node/leaf to do the insertion
             
             // Is the item already in here?
             if (itemFoundInLeaf(current, item)) {
-                System.out.println("Item " + item + " already in tree");
+                if (mergeCheck != null) {
+                    processItemMerge(current, item);
+                }
                 return null;
             } else {
                 if (current.isFull() == false) {
@@ -68,7 +74,7 @@ public class TwoThreeTree<T extends Comparable<T>> {
             }
         } else {
             // Not deep enough - continue traversing
-            if (item.compareTo(current.getLeftMax()) < 0) {
+            if (item.compareTo(current.getLeftMax()) <= 0) {
                 // Follow the left child
                 pushUpNode = insertNode(current.getLeftChild(), item);
                 
@@ -98,10 +104,9 @@ public class TwoThreeTree<T extends Comparable<T>> {
                         parent.setMiddleChild(middle);
                         parent.setMiddleMax(parent.getMiddleChild().maxValue());
                         pushUpNode = parent;
-                        displayNode(parent, "");
                     }
                 }
-            } else if (item.compareTo(current.getMiddleMax()) < 0 || current.getRightChild() == null) {
+            } else if (item.compareTo(current.getMiddleMax()) <= 0 || current.getRightChild() == null) {
                 // Follow the middle child
                 pushUpNode = insertNode(current.getMiddleChild(), item);
                 
@@ -241,6 +246,52 @@ public class TwoThreeTree<T extends Comparable<T>> {
         return parent;
     }
 
+    private void processItemMerge(Node node, T item) {
+        if (node.isLeaf()) {
+            if (mergeCheck != null) {
+                T apply = mergeCheck.apply(node.leftMax, item);
+                node.setLeftMax(apply);
+            }
+        } else {
+            if (item.compareTo(node.getLeftMax()) == 0) {
+                processItemMerge(node.getLeftChild(), item);
+            } else if (item.compareTo(node.getMiddleMax()) == 0) {
+                processItemMerge(node.getMiddleChild(), item);
+            } else {
+                processItemMerge(node.getRightChild(), item);
+            }
+        }
+    }
+    
+    public T find(T item) {
+        return findItemI(root, item);
+    }
+    
+    private T findItemI(Node node, T item) {
+        if (node == null) {
+            return null;
+        }
+        
+        if (node.isLeaf()) {
+            if (item.compareTo(node.getLeftMax()) == 0) {
+                return node.getLeftMax();
+            } else {
+                return null;
+            }
+        } else {
+            // Not a leaf, need to walk it
+            if (item.compareTo(node.getLeftMax()) <= 0) {
+                // Search item less than left max, follow left
+                return findItemI(node.getLeftChild(), item);
+            } else if (item.compareTo(node.getMiddleMax()) <= 0) {
+                // Search item less than middle max, follow left
+                return findItemI(node.getMiddleChild(), item);
+            } else {
+                return findItemI(node.getRightChild(), item);
+            }
+        }
+    }
+    
     public List<T> flattenToList() {
         List<T> flattenedList = new LinkedList<>();
         inOrderAddToList(root, flattenedList);
@@ -332,7 +383,7 @@ public class TwoThreeTree<T extends Comparable<T>> {
 
         public T maxValue() {
             if (rightChild != null) {
-                return rightChild.getLeftMax();
+                return rightChild.maxValue();
             } else if (middleMax != null) {
                 return middleMax;
             } else {
