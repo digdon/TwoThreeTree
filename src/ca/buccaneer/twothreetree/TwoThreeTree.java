@@ -382,12 +382,16 @@ public class TwoThreeTree<T extends Comparable<T>> {
         }
 
         public T maxValue() {
-            if (rightChild != null) {
-                return rightChild.maxValue();
-            } else if (middleMax != null) {
-                return middleMax;
+            Node temp = this;
+            
+            while (temp.rightChild != null) {
+                temp = temp.rightChild;
+            }
+            
+            if (temp.middleMax != null) {
+                return temp.middleMax;
             } else {
-                return leftMax;
+                return temp.leftMax;
             }
         }
     }
